@@ -1,0 +1,97 @@
+<!doctype html>
+<html ng-app="rest-browser">
+
+<head>
+  <link href="./lib/bootstrap.min.css" rel="stylesheet">
+  <link href="./index.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+
+  <div ng-controller="endpointsController">
+
+    <script type="text/ng-template" id="myModalContent.html">
+      <form class="form">
+        <div class="modal-header">
+          <h3 class="modal-title">{{message}}</h3>
+        </div>
+        <div class="modal-body">
+          <h2></h2>
+          <div class="form-group">
+            <label for="inputEmail" class="sr-only">Username</label>
+            <input type="text" id="inputEmail" ng-model="username" class="form-control" placeholder="username" required="" autofocus="">
+          </div>
+          <div class="form-group">
+            <label for="inputPassword" class="sr-only">Password</label>
+            <input type="password" id="inputPassword" ng-model="password" ng-enter="login()" class="form-control" placeholder="Password" required="">
+          </div>
+        </div>
+        <button class="btn btn-lg btn-primary btn-block" ng-click="login()" type="submit">Sign in</button>
+      </form>
+
+    </script>
+
+
+    <progressbar value="progress"></progressbar>
+    <div class="form-inline text-center">
+      <label for="apiselect">Endpoint:</label>
+      <select id="apiselect" class="form-control" ng-model="selectedEndpoint" ng-change="getListing(selectedEndpoint)">
+        <option ng-repeat="endpoint in simpleEndpointsLising" value="{{endpoint}}">{{endpoint}}</option>
+      </select>
+      <div class="form-group">
+        <ul class="pagination">
+          <li ng-class="prevPageDisabled()"> <a href ng-click="prevPage()">Prev</a> </li>
+          <li>
+            <span ng-click="currentPage=0">Page {{currentPage + 1}} of {{pageCount() + 1}}</span>
+          </li>
+          <li ng-class="nextPageDisabled()"> <a href ng-click="nextPage()">Next</a> </li>
+        </ul>
+      </div>
+      <div class="form-group">
+        <label for="search"> Search </label>
+        <input id="search" type="text" class="search-query" ng-model="filterString" ng-change="currentPage=0">
+      </div>
+    </div>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th ng-repeat="(key, value) in endpoints[selectedEndpoint].data[0]">
+            {{key}}
+          </th>
+          <th>
+
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td ng-repeat="(key, value) in endpoints[selectedEndpoint].data[0]">
+            <input required class="form-control" id="{{key}}" ng-model="new[key]">
+          </td>
+          <td>
+            <button type="submit" ng-click="postListing()" class="btn btn-default">Add</button>
+          </td>
+        </tr>
+        <tr class="my-repeat-animation" ng-enter="putListing(row)" ng-repeat="row in endpoints[selectedEndpoint].data | filter:filterString | offset: currentPage*itemsPerPage | limitTo: itemsPerPage">
+          <td ng-repeat="(key, value) in row">
+            <input type="text" class="form-control" id="email" ng-model="row[key]">
+          </td>
+          <td>
+            <button type="submit" ng-click="putListing(row)" class="btn btn-default">Update</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- // <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.13/angular.min.js"></script>
+  // <script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.13.0.min.js"></script>
+  // <script src="http://code.angularjs.org/1.2.2/angular-animate.min.js"></script> -->
+  <script src="./lib/angular.min.js"></script>
+  <script src="./lib/ui-bootstrap-tpls-0.13.0.min.js"></script>
+  <script src="./lib/angular-animate.min.js"></script>
+  <script src="app.js"></script>
+</body>
+
+</html>

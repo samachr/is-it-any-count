@@ -1,0 +1,13 @@
+.my-repeat-animation.ng-enter,
+.my-repeat-animation.ng-move {
+  -webkit-transition: 0.25s linear all;
+  transition: 0.25s linear all;
+}
+
+.my-repeat-animation.ng-enter {
+  opacity:0;
+}
+.my-repeat-animation.ng-enter.ng-enter-active {
+  opacity:1;
+}
+.nav, .pagination, .carousel, .panel-title a { cursor: pointer; }
