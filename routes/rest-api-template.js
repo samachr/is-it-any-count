@@ -1,13 +1,10 @@
-module.exports = function (table, columns) {
+module.exports = function (db, table, columns) {
   var express = require('express');
   var router = express.Router();
-
-  var db = require('../database/db.js');
 
   var questionMarks = columns.map(function(){return "?"}).join(", ");
 
   var SQLSchemaStatement = "CREATE TABLE IF NOT EXISTS " + table + " (id INTEGER PRIMARY KEY, " + columns.join(" TEXT, ") + " TEXT)";
-  // console.log(SQLSchemaStatement);
   var SQLGetStatement = "SELECT id, " + columns.join() + " FROM " + table + "";
   var SQLPostStatement = "INSERT INTO " + table + " (" + columns.join() + ") VALUES (" + questionMarks + ")";
   var SQLGetByIDStatement = "SELECT id, " + columns.join() + " FROM " + table + " WHERE id=(?)";
