@@ -1,28 +1,19 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var app = express();
-var logger = require('morgan');
 var path = require('path');
 var config = require('./config');
 var colors = require('colors');
 var jwt = require('jsonwebtoken');
 
 // configure app
-// app.use(logger('dev')); // log requests to the console
+app.use(require('morgan')('dev')); // log requests to the console
 
 // configure body parser
 app.use(bodyParser.urlencoded({
   extended: true
 }));
 app.use(bodyParser.json());
-
-// create our router
-// var router = express.Router();
-
-var session = require('express-session');
-app.use(session({
-  secret: 'keyboard cat'
-}))
 
 //setup database directories
 var fs = require('fs');
@@ -36,72 +27,46 @@ try {
   }
 }
 
-// app.use('/api/auth', require('./routes/auth.js'));
-// middleware to use for all requests
-// app.use(function(req, res, next) {
-//   // check header or url parameters or post parameters for token
-//   var token = req.body.token || req.query.token || req.headers['x-access-token'];
-//   // decode token
-//   if (token) {
-//     // verifies secret and checks exp
-//     jwt.verify(token, app.get('jwtkey'), function(err, decoded) {
-//       if (err) {
-//         return res.json({
-//           success: false,
-//           message: 'Failed to authenticate token.'
-//         });
-//       } else {
-//         // if everything is good, save to request for use in other routes
-//         req.decoded = decoded;
-//         next();
-//       }
-//     });
-//   } else {
-//
-//     // if there is no token
-//     // return an error
-//     return res.status(403).send({
-//       success: false,
-//       message: 'No token provided.'
-//     });
-//
-//   }
-// });
-
+//web token based routing security
 app.set('jwtkey', config.secret);
 app.use(function (req, res, next) {
   if(req.url.indexOf('/api') == 0) {
     if(req.url.indexOf('/api/auth') == 0) {
       next();
-      return;
-    }
-    var token = req.body.token || req.query.token || req.headers['x-access-token'];
-    if (token) {
-      jwt.verify(token, app.get('jwtkey'), function(err, decoded) {
-        if (err) {
-          console.log('token verification failed');
-        } else {
-          req.decoded = decoded;
-          if(req.url.indexOf('/api/'+req.decoded.username) == 0) {
-            next();
-          } else {
-            res.status('403');
-            res.json({message:'unauthorized access'});
-            console.log('unauthorized access'.red)
-          }
-        }
-      });
     } else {
-      console.log('no token');
-      res.json({message:'no token'});
+      var token = req.body.token || req.query.token || req.headers['x-access-token'];
+      if (token) {
+        jwt.verify(token, app.get('jwtkey'), function(err, decoded) {
+          if (err) {
+            res.json({
+              message: 'something bad happened with the token'
+            });
+          } else {
+            req.decoded = decoded;
+            if (req.url.indexOf('/api/' + req.decoded.username) == 0) {
+              next();
+            } else {
+              res.status('403');
+              res.json({
+                message: 'unauthorized access'
+              });
+            }
+          }
+        });
+      } else {
+        res.json({
+          message: 'no token'
+        });
+      }
     }
   } else {
+    //not on api, just pass it on
     next();
   }
 });
 
-
-var sqlite3 = require('sqlite3').verbose();
+// var sqlite3 = require('sqlite3').verbose();
+var sqlite3 = require('sqlite3');
 var db = new sqlite3.Database(path.join(__dirname, 'databases')+"/users.db");
 
 var userdatabases = [];
@@ -121,7 +86,7 @@ app.post('/api/auth', function(req, res) {
       var token = jwt.sign({
         username: req.body.username
       }, config.secret, {
-        expiresInMinutes: 43200 //one month
+        expiresIn: 2592000 //one month
       });
       res.json({
         success: true,
@@ -144,11 +109,10 @@ db.serialize(function() {
       db.serialize(function() {
         db.run("INSERT INTO users (username, password) VALUES (?, ?)", config.adminuser, config.adminpassword);
 
-        console.log("...and some test users".yellow);
+        console.log("...and a test user".yellow);
 
-        for (var i = 0; i < 3; i++) {
-          db.run("INSERT INTO users (username, password) VALUES (?, ?)", "user" + i, "testpass");
-        }
+        db.run("INSERT INTO users (username, password) VALUES (?, ?)", "testuser", "testpass");
+
         initializeUserApis(db);
       });
     } else {
@@ -188,11 +152,13 @@ function initializeUserApis(userdb) {
           next();
         });
 
-        //TODO customize this shema route so that deleting drops the table
-        // app.delete(url, function(req, res, next) {
-        //   userdatabases[user.username]
-        //   next();
-        // });
+        app.delete(url, function(req, res, next) {
+          userdatabases[user.username].all(SQLGetByIDStatement, req.params.id, function(err, rows) {
+            if (err) console.log(err);
+            if(rows.length) userdatabases[user.username].run("DROP TABLE" + JSON.parse(rows[0].schema).tablename);
+          });
+          next();
+        });
 
         app.use(url, require('./routes/rest-api-template.js')(userdatabases[user.username], "databaseschemas", ["schema"]));
 
