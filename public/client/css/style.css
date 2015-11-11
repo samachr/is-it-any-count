@@ -1,0 +1,24 @@
+/*.demo {
+  background-color: #aeaeae;
+}*/
+
+.demo a {
+  text-decoration: none !important;
+  color: white;
+  height:100%;
+  width:100%;
+}
+
+.ace_editor { height: 400px; }
+
+/*.demo a.visited {
+  color:white;
+}
+
+.demo #content {
+  background-color: white;
+  padding:30px;
+  font-weight:600;
+  border: 1px solid #aeaeae;
+  border-top:none;
+}*/

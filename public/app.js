@@ -3,6 +3,19 @@ var app = angular.module('rest-browser', ['ui.bootstrap', 'ngAnimate']);
 app.controller('endpointsController', function($scope, $window, $http, $timeout, $modal) {
     $scope.items = ['item1', 'item2', 'item3'];
 
+    $scope.showEndpointModal = function() {
+      var addEndpointModalInstance = $modal.open({
+        animation: false,
+        templateUrl: 'addEndpointModal.html',
+        controller: 'addEndpointModalInstanceCtrl',
+        backdrop: "static",
+        scope: $scope
+      });
+      addEndpointModalInstance.result.then(function (data) {
+        $scope.update()
+      });
+    };
+
   var modalInstance = $modal.open({
     animation: false,
     templateUrl: 'myModalContent.html',
@@ -10,29 +23,39 @@ app.controller('endpointsController', function($scope, $window, $http, $timeout,
     backdrop: "static"
   });
 
-  modalInstance.result.then(function (token) {
-    // console.log(token);
+  $scope.update = function() {
+    $scope.simpleEndpointsListing = [];
+    $scope.endpoints = [];
+    $http.get('/api/'+$scope.username+'?token=' + $scope.webAuthToken).
+    success(function(data, status, headers, config) {
+      $scope.progress += 50;
+      data.forEach(function(endpoint) {
+        var tablename = JSON.parse(endpoint.schema).tablename;
+        var columns = JSON.parse(endpoint.schema).columns;
+        $scope.endpoints['/api/'+$scope.username+"/"+tablename] = {
+          url: '/api/'+$scope.username+"/"+tablename,
+          columns: columns,
+          data: []
+        };
+        $scope.simpleEndpointsListing.push('/api/'+$scope.username+"/"+tablename);
+      })
+      $scope.selectedEndpoint = $scope.endpoints[Object.keys($scope.endpoints)[0]].url;
+      $scope.getListing($scope.selectedEndpoint);
+    });
+  };
+
+  modalInstance.result.then(function (data) {
+    var username = data.username;
+    $scope.username = username;
     $scope.progress += 20;
-      $scope.webAuthToken = token;
-      $http.get('/api?token=' + $scope.webAuthToken).
-      success(function(data, status, headers, config) {
-        $scope.progress += 50;
-        data.endpoints.forEach(function(endpoint) {
-          $scope.endpoints[endpoint] = {
-            url: endpoint,
-            data: []
-          };
-          $scope.simpleEndpointsLising.push(endpoint);
-        })
-        $scope.selectedEndpoint = $scope.endpoints[data.endpoints[0]].url;
-        $scope.getListing($scope.selectedEndpoint);
-      });
+      $scope.webAuthToken = data.token;
+      $scope.update();
   });
 
 
   $scope.endpoints = [];
   $scope.responses = [];
-  $scope.simpleEndpointsLising = [];
+  $scope.simpleEndpointsListing = [];
   $scope.webAuthToken = '';
   $scope.selectedEndpoint = "";
   $scope.new = {};
@@ -41,16 +64,7 @@ app.controller('endpointsController', function($scope, $window, $http, $timeout,
     $scope.new = {};
     $scope.progress = 0;
     $scope.currentPage = 0;
-    // $http.get(endpoint + '/columns').
-    // success(function(data, status, headers, config) {
-    //   $scope.progress += 20;
-    //   $scope.endpoints[endpoint].columns = [];
-    //   data.forEach(function(data) {
-    //     $scope.new[data] = "";
-    //     $scope.endpoints[endpoint].columns.push(data);
-    //   })
-    // });
-    $http.get(endpoint).
+    $http.get(endpoint + '/all'+'?token=' + $scope.webAuthToken).
     success(function(data, status, headers, config) {
       $scope.endpoints[endpoint].data = [];
       data.forEach(function(data) {
@@ -62,8 +76,7 @@ app.controller('endpointsController', function($scope, $window, $http, $timeout,
   }
 
   $scope.postListing = function() {
-    // console.log($scope.new);
-    $http.post($scope.selectedEndpoint, $scope.new).
+    $http.post($scope.selectedEndpoint+'?token=' + $scope.webAuthToken, $scope.new).
     success(function(data, status, headers, config) {
       $scope.getListing($scope.selectedEndpoint);
     });
@@ -71,7 +84,7 @@ app.controller('endpointsController', function($scope, $window, $http, $timeout,
 
   $scope.putListing = function(row) {
     // console.log($scope.selectedEndpoint + "/" + row.id);
-    $http.put($scope.selectedEndpoint + "/" + row.id, row).
+    $http.put($scope.selectedEndpoint + "/" + row.id+'?token=' + $scope.webAuthToken, row).
     success(function(data, status, headers, config) {
       $scope.getListing($scope.selectedEndpoint);
     });
@@ -157,7 +170,25 @@ app.controller('ModalInstanceCtrl', function ($scope, $modalInstance, $http) {
       password: $scope.password
     }).
     success(function(data, status, headers, config) {
-      $modalInstance.close(data.token);
+      $modalInstance.close({token: data.token, username: $scope.username});
+    }).
+    error(function(data, status, headers, config) {
+      $scope.message = "Invalid username or password";
+    });
+  };
+});
+
+app.controller('addEndpointModalInstanceCtrl', function ($scope, $modalInstance, $http) {
+  $scope.schema = {tablename: null, columns: ['']};
+  $scope.addColumn = function() {
+    $scope.schema.columns.push('');
+  };
+  $scope.submit = function () {
+    $http.post('/api/'+$scope.username+'?token=' + $scope.webAuthToken, {
+      schema: JSON.stringify($scope.schema)
+    }).
+    success(function(data, status, headers, config) {
+      $modalInstance.close({token: data.token, username: $scope.username});
     }).
     error(function(data, status, headers, config) {
       $scope.message = "Invalid username or password";

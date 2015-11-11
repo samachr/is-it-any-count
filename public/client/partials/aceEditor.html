@@ -1,0 +1,111 @@
+<div layout="column" style="height:500px;">
+  <section layout="row" flex>
+    <md-sidenav class="md-sidenav-left md-whiteframe-z2" md-component-id="left" md-is-locked-open="$mdMedia('gt-md')">
+      <md-toolbar class="md-theme-indigo">
+        <h1 ng-click="toggleLeft()" class="md-toolbar-tools">Test Files</h1>
+      </md-toolbar>
+      <md-content layout-padding>
+        <!-- <md-button ng-click="toggleLeft()" class="md-primary" hide-gt-md>
+          Close Sidenav Left
+        </md-button> -->
+        <p hide-md show-gt-md>
+          This sidenav is locked open on your device. To go back to the default behavior, narrow your display.
+        </p>
+      </md-content>
+    </md-sidenav>
+    <md-content flex layout-padding>
+      <div layout="column" layout-fill layout-align="top center">
+        <div layout="row">
+          <div layout="column" layout-fill layout-align="left">
+            <md-button ng-click="toggleLeft()" class="md-primary" hide-gt-md>
+              Choose Test To Edit
+            </md-button>
+            <p hide-md show-gt-md>
+              Current Filename
+            </p>
+          </div>
+          <div layout="column" layout-fill layout-align="right">
+            <md-button ng-click="toggleRight()" class="md-primary">
+              Console
+            </md-button>
+          </div>
+        </div>
+        <div ui-ace="{
+          useWrapMode : true,
+          mode: 'ruby',
+          onLoad: aceLoaded,
+          onChange: aceChanged
+        }"></div>
+      </div>
+      <div flex></div>
+    </md-content>
+    <md-sidenav class="md-sidenav-right md-whiteframe-z2" md-component-id="right">
+      <md-toolbar class="md-theme-light">
+        <h1 class="md-toolbar-tools">Console</h1>
+      </md-toolbar>
+      <md-content layout-padding>
+        <form>
+          <md-input-container>
+            <label for="testInput">Command</label>
+            <input type="text" id="testInput" ng-model="data" md-sidenav-focus>
+          </md-input-container>
+        </form>
+        <!-- <md-button ng-click="toggleRight()" class="md-primary">
+          Close Sidenav Right
+        </md-button> -->
+      </md-content>
+    </md-sidenav>
+  </section>
+</div>
+
+<!-- {
+  "Alt-Left": "goSubwordLeft",
+  "Alt-Right": "goSubwordRight",
+  "Ctrl-Up": "scrollLineUp",
+  "Ctrl-Down": "scrollLineDown",
+  "Shift-Ctrl-L": "splitSelectionByLine",
+  "Shift-Tab": "indentLess",
+  "Esc": "singleSelectionTop",
+  "Ctrl-L": "selectLine",
+  "Shift-Ctrl-K": "deleteLine",
+  "Ctrl-Enter": "insertLineAfter",
+  "Shift-Ctrl-Enter": "insertLineBefore",
+  "Ctrl-D": "selectNextOccurrence",
+  "Shift-Ctrl-Space": "selectScope",
+  "Shift-Ctrl-M": "selectBetweenBrackets",
+  "Ctrl-M": "goToBracket",
+  "Shift-Ctrl-Up": "swapLineUp",
+  "Shift-Ctrl-Down": "swapLineDown",
+  "Ctrl-/": "toggleComment",
+  "Ctrl-J": "joinLines",
+  "Shift-Ctrl-D": "duplicateLine",
+  "Ctrl-T": "transposeChars",
+  "F9": "sortLines",
+  "Ctrl-F9": "sortLinesInsensitive",
+  "F2": "nextBookmark",
+  "Shift-F2": "prevBookmark",
+  "Ctrl-F2": "toggleBookmark",
+  "Shift-Ctrl-F2": "clearBookmarks",
+  "Alt-F2": "selectBookmarks",
+  "Alt-Q": "wrapLines",
+  "Ctrl-K Ctrl-Backspace": "delLineLeft",
+  "Ctrl-K Ctrl-K": "delLineRight",
+  "Ctrl-K Ctrl-U": "upcaseAtCursor",
+  "Ctrl-K Ctrl-L": "downcaseAtCursor",
+  "Ctrl-K Ctrl-Space": "setSublimeMark",
+  "Ctrl-K Ctrl-A": "selectToSublimeMark",
+  "Ctrl-K Ctrl-W": "deleteToSublimeMark",
+  "Ctrl-K Ctrl-X": "swapWithSublimeMark",
+  "Ctrl-K Ctrl-Y": "sublimeYank",
+  "Ctrl-K Ctrl-G": "clearBookmarks",
+  "Ctrl-K Ctrl-C": "showInCenter",
+  "Shift-Alt-Up": "selectLinesUpward",
+  "Shift-Alt-Down": "selectLinesDownward",
+  "Ctrl-F3": "findUnder",
+  "Shift-Ctrl-F3": "findUnderPrevious",
+  "Shift-Ctrl-[": "fold",
+  "Shift-Ctrl-]": "unfold",
+  "Ctrl-K Ctrl-j": "unfoldAll",
+  "Ctrl-K Ctrl-0": "unfoldAll",
+  "Ctrl-H": "replace",
+} -->

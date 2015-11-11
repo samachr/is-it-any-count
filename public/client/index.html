@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Tab based template</title>
+  <link rel='stylesheet' href='http://fonts.googleapis.com/css?family=Roboto:400,500,700,400italic'>
+  <link rel="stylesheet" href="./bower_components/angular-material/angular-material.css" />
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body ng-app="demoApp">
+  <md-content ng-controller="DemoController" layout="column" class="demo">
+
+    <!-- <script type="text/ng-template" id="partials/view1.html"> View #1 </script> -->
+    <!-- <script type="text/ng-template" id="partials/view2.html"> View #2 </script> -->
+    <!-- <script type="text/ng-template" id="partials/view3.html"> View #3 </script> -->
+
+    <md-tabs class="md-primary" md-stretch-tabs md-selected="selectedIndex">
+      <md-tab> <a href="#/editor">Code Editor</a> </md-tab>
+      <md-tab> <a href="#/view2">History</a> </md-tab>
+      <md-tab> <a href="#/status">Status Information</a> </md-tab>
+    </md-tabs>
+
+    <div id="content" ng-view flex> </div>
+
+  </md-content>
+  <script src="./bower_components/angular/angular.js"></script>
+  <script src="./bower_components/angular-animate/angular-animate.js"></script>
+  <script src="./bower_components/angular-aria/angular-aria.js"></script>
+  <script type="text/javascript" src="./bower_components/angular-material/angular-material.js"></script>
+  <script src='./bower_components/angular-route/angular-route.js'></script>
+
+
+  <script type="text/javascript" src="bower_components/ace-builds/src-min-noconflict/ace.js"></script>
+  <!-- <script type="text/javascript" src="bower_components/angular/angular.js"></script> -->
+  <script type="text/javascript" src="bower_components/angular-ui-ace/ui-ace.js"></script>
+  <script src="bower_components/ace-builds/src-min-noconflict/ext-language_tools.js"></script>
+  <script src="js/index.js"></script>
+
+</body>
+
+</html>
