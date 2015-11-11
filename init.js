@@ -8,7 +8,7 @@ var colors = require('colors');
 var jwt = require('jsonwebtoken');
 
 // configure app
-app.use(logger('dev')); // log requests to the console
+// app.use(logger('dev')); // log requests to the console
 
 // configure body parser
 app.use(bodyParser.urlencoded({
@@ -36,16 +36,64 @@ try {
   }
 }
 
+// app.use('/api/auth', require('./routes/auth.js'));
+// middleware to use for all requests
+// app.use(function(req, res, next) {
+//   // check header or url parameters or post parameters for token
+//   var token = req.body.token || req.query.token || req.headers['x-access-token'];
+//   // decode token
+//   if (token) {
+//     // verifies secret and checks exp
+//     jwt.verify(token, app.get('jwtkey'), function(err, decoded) {
+//       if (err) {
+//         return res.json({
+//           success: false,
+//           message: 'Failed to authenticate token.'
+//         });
+//       } else {
+//         // if everything is good, save to request for use in other routes
+//         req.decoded = decoded;
+//         next();
+//       }
+//     });
+//   } else {
+//
+//     // if there is no token
+//     // return an error
+//     return res.status(403).send({
+//       success: false,
+//       message: 'No token provided.'
+//     });
+//
+//   }
+// });
+
+app.set('jwtkey', config.secret);
 app.use(function (req, res, next) {
   if(req.url.indexOf('/api') == 0) {
     if(req.url.indexOf('/api/auth') == 0) {
       next();
-    } else if (req.url.indexOf('/api/'+req.session.username) == 0) {
-      next();
+      return;
+    }
+    var token = req.body.token || req.query.token || req.headers['x-access-token'];
+    if (token) {
+      jwt.verify(token, app.get('jwtkey'), function(err, decoded) {
+        if (err) {
+          console.log('token verification failed');
+        } else {
+          req.decoded = decoded;
+          if(req.url.indexOf('/api/'+req.decoded.username) == 0) {
+            next();
+          } else {
+            res.status('403');
+            res.json({message:'unauthorized access'});
+            console.log('unauthorized access'.red)
+          }
+        }
+      });
     } else {
-      res.status('403');
-      res.json({message:'unauthorized access'});
-      console.log('unauthorized access'.red)
+      console.log('no token');
+      res.json({message:'no token'});
     }
   } else {
     next();
@@ -59,7 +107,6 @@ var db = new sqlite3.Database(path.join(__dirname, 'databases')+"/users.db");
 var userdatabases = [];
 var databasesExist = false;
 
-//TODO: fill in this stub with json webtoken stuff
 app.post('/api/auth', function(req, res) {
   db.all("SELECT * FROM users WHERE username=(?) AND password=(?)", req.body.username, req.body.password, function(err, rows) {
     if (err || rows.length == 0) {
@@ -71,8 +118,6 @@ app.post('/api/auth', function(req, res) {
       })
       console.log(err);
     } else {
-      // console.log("Success?");
-
       var token = jwt.sign({
         username: req.body.username
       }, config.secret, {
@@ -84,8 +129,6 @@ app.post('/api/auth', function(req, res) {
       });
     }
   });
-
-  req.session.username = req.body.username;
 });
 
 console.log("---Initializing databases---".grey);

@@ -1,62 +1,71 @@
-var app = angular.module('rest-browser', ['ui.bootstrap', 'ngAnimate']);
+var app = angular.module('rest-browser', ['ui.bootstrap', 'ngAnimate', 'ngCookies']);
 
-app.controller('endpointsController', function($scope, $window, $http, $timeout, $modal) {
-    $scope.items = ['item1', 'item2', 'item3'];
+app.controller('endpointsController', function($scope, $window, $http, $timeout, $modal, $cookies) {
+  // Retrieving a cookie
+  var tokenCookie = $cookies.get('instant-rest-api-token');
+  var userNameCookie = $cookies.get('instant-rest-api-username');
 
-    $scope.showEndpointModal = function() {
-      var addEndpointModalInstance = $modal.open({
-        animation: false,
-        templateUrl: 'addEndpointModal.html',
-        controller: 'addEndpointModalInstanceCtrl',
-        backdrop: "static",
-        scope: $scope
-      });
-      addEndpointModalInstance.result.then(function (data) {
-        $scope.update()
-      });
-    };
-
-  var modalInstance = $modal.open({
-    animation: false,
-    templateUrl: 'myModalContent.html',
-    controller: 'ModalInstanceCtrl',
-    backdrop: "static"
-  });
+  $scope.showEndpointModal = function() {
+    var addEndpointModalInstance = $modal.open({
+      animation: false,
+      templateUrl: 'addEndpointModal.html',
+      controller: 'addEndpointModalInstanceCtrl',
+      backdrop: "static",
+      scope: $scope
+    });
+    addEndpointModalInstance.result.then(function(data) {
+      $scope.update()
+    });
+  };
 
   $scope.update = function() {
     $scope.simpleEndpointsListing = [];
     $scope.endpoints = [];
-    $http.get('/api/'+$scope.username+'?token=' + $scope.webAuthToken).
+    $http.get('/api/' + $scope.username + '?token=' + $scope.webAuthToken).
     success(function(data, status, headers, config) {
       $scope.progress += 50;
       data.forEach(function(endpoint) {
         var tablename = JSON.parse(endpoint.schema).tablename;
         var columns = JSON.parse(endpoint.schema).columns;
-        $scope.endpoints['/api/'+$scope.username+"/"+tablename] = {
-          url: '/api/'+$scope.username+"/"+tablename,
+        $scope.endpoints['/api/' + $scope.username + "/" + tablename] = {
+          url: '/api/' + $scope.username + "/" + tablename,
           columns: columns,
           data: []
         };
-        $scope.simpleEndpointsListing.push('/api/'+$scope.username+"/"+tablename);
+        $scope.simpleEndpointsListing.push('/api/' + $scope.username + "/" + tablename);
       })
       $scope.selectedEndpoint = $scope.endpoints[Object.keys($scope.endpoints)[0]].url;
       $scope.getListing($scope.selectedEndpoint);
     });
   };
 
-  modalInstance.result.then(function (data) {
-    var username = data.username;
-    $scope.username = username;
-    $scope.progress += 20;
+  $scope.webAuthToken = '';
+
+  if(tokenCookie && userNameCookie) {
+    $scope.username = userNameCookie;
+    $scope.webAuthToken = tokenCookie;
+    $scope.update();
+  }else {
+    var modalInstance = $modal.open({
+      animation: false,
+      templateUrl: 'myModalContent.html',
+      controller: 'ModalInstanceCtrl',
+      backdrop: "static"
+    });
+    modalInstance.result.then(function(data) {
+      var username = data.username;
+      $scope.username = username;
+      $scope.progress += 20;
       $scope.webAuthToken = data.token;
       $scope.update();
-  });
-
+      $cookies.put('instant-rest-api-token', $scope.webAuthToken);
+      $cookies.put('instant-rest-api-username', $scope.username);
+    });
+  }
 
   $scope.endpoints = [];
   $scope.responses = [];
   $scope.simpleEndpointsListing = [];
-  $scope.webAuthToken = '';
   $scope.selectedEndpoint = "";
   $scope.new = {};
 
@@ -64,7 +73,7 @@ app.controller('endpointsController', function($scope, $window, $http, $timeout,
     $scope.new = {};
     $scope.progress = 0;
     $scope.currentPage = 0;
-    $http.get(endpoint + '/all'+'?token=' + $scope.webAuthToken).
+    $http.get(endpoint + '/all' + '?token=' + $scope.webAuthToken).
     success(function(data, status, headers, config) {
       $scope.endpoints[endpoint].data = [];
       data.forEach(function(data) {
@@ -76,15 +85,14 @@ app.controller('endpointsController', function($scope, $window, $http, $timeout,
   }
 
   $scope.postListing = function() {
-    $http.post($scope.selectedEndpoint+'?token=' + $scope.webAuthToken, $scope.new).
+    $http.post($scope.selectedEndpoint + '?token=' + $scope.webAuthToken, $scope.new).
     success(function(data, status, headers, config) {
       $scope.getListing($scope.selectedEndpoint);
     });
   }
 
   $scope.putListing = function(row) {
-    // console.log($scope.selectedEndpoint + "/" + row.id);
-    $http.put($scope.selectedEndpoint + "/" + row.id+'?token=' + $scope.webAuthToken, row).
+    $http.put($scope.selectedEndpoint + "/" + row.id + '?token=' + $scope.webAuthToken, row).
     success(function(data, status, headers, config) {
       $scope.getListing($scope.selectedEndpoint);
     });
@@ -158,19 +166,22 @@ app.directive('ngEnter', function() {
   };
 });
 
-app.controller('ModalInstanceCtrl', function ($scope, $modalInstance, $http) {
+app.controller('ModalInstanceCtrl', function($scope, $modalInstance, $http) {
   $scope.message = "Sign in";
   $scope.username = "";
   $scope.password = "";
 
-  $scope.login = function () {
+  $scope.login = function() {
     // console.log($scope.username, $scope.password);
     $http.post('/api/auth', {
       username: $scope.username,
       password: $scope.password
     }).
     success(function(data, status, headers, config) {
-      $modalInstance.close({token: data.token, username: $scope.username});
+      $modalInstance.close({
+        token: data.token,
+        username: $scope.username
+      });
     }).
     error(function(data, status, headers, config) {
       $scope.message = "Invalid username or password";
@@ -178,17 +189,25 @@ app.controller('ModalInstanceCtrl', function ($scope, $modalInstance, $http) {
   };
 });
 
-app.controller('addEndpointModalInstanceCtrl', function ($scope, $modalInstance, $http) {
-  $scope.schema = {tablename: null, columns: ['']};
+app.controller('addEndpointModalInstanceCtrl', function($scope, $modalInstance, $http, $cookies) {
+  $scope.schema = {
+    tablename: null,
+    columns: ['']
+  };
+  if(!$scope.webAuthToken) $scope.webAuthToken = $cookies.get('instant-rest-api-token');
+
   $scope.addColumn = function() {
     $scope.schema.columns.push('');
   };
-  $scope.submit = function () {
-    $http.post('/api/'+$scope.username+'?token=' + $scope.webAuthToken, {
+  $scope.submit = function() {
+    $http.post('/api/' + $scope.username + '?token=' + $scope.webAuthToken, {
       schema: JSON.stringify($scope.schema)
     }).
     success(function(data, status, headers, config) {
-      $modalInstance.close({token: data.token, username: $scope.username});
+      $modalInstance.close({
+        token: data.token,
+        username: $scope.username
+      });
     }).
     error(function(data, status, headers, config) {
       $scope.message = "Invalid username or password";
