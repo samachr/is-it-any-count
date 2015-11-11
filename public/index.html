@@ -32,12 +32,45 @@
 
     </script>
 
+    <script type="text/ng-template" id="addEndpointModal.html">
+      <form class="form">
+        <div class="modal-header">
+          <h3 class="modal-title">{{username}}{{message}}</h3>
+        </div>
+        <div class="modal-body">
+          <table class="table table-striped">
+            <tr>
+              <th>
+                Endpoint Name
+              </th>
+              <th colspan="{{schema.columns.length + 1}}">
+                Columns
+              </th>
+            </tr>
+            <tr>
+              <td>
+                <input required class="form-control" ng-model="schema.tablename">
+              </td>
+              <td ng-repeat="column in schema.columns track by $index">
+                <input required class="form-control" id="{{column}}" ng-model="schema.columns[$index]">
+              </td>
+              <td>
+                <button class="btn btn-default" ng-click="addColumn()">Add Column</button>
+              </td>
+            </tr>
+          </table>
+        </div>
+        <button class="btn btn-lg btn-primary btn-block" ng-click="submit()" type="submit">Add Endpoint</button>
+      </form>
+    </script>
+
 
     <progressbar value="progress"></progressbar>
     <div class="form-inline text-center">
+      <button class="btn btn-primary" ng-click="showEndpointModal()" type="button">Add New Endpoint</button>
       <label for="apiselect">Endpoint:</label>
       <select id="apiselect" class="form-control" ng-model="selectedEndpoint" ng-change="getListing(selectedEndpoint)">
-        <option ng-repeat="endpoint in simpleEndpointsLising" value="{{endpoint}}">{{endpoint}}</option>
+        <option ng-repeat="endpoint in simpleEndpointsListing track by $index" value="{{endpoint}}">{{endpoint}}</option>
       </select>
       <div class="form-group">
         <ul class="pagination">
@@ -55,9 +88,13 @@
     </div>
     <table class="table table-striped">
       <thead>
+
         <tr>
-          <th ng-repeat="(key, value) in endpoints[selectedEndpoint].data[0]">
-            {{key}}
+          <th>
+            ID
+          </th>
+          <th ng-repeat="column in endpoints[selectedEndpoint].columns">
+            {{column}}
           </th>
           <th>
 
@@ -66,8 +103,11 @@
       </thead>
       <tbody>
         <tr>
-          <td ng-repeat="(key, value) in endpoints[selectedEndpoint].data[0]">
-            <input required class="form-control" id="{{key}}" ng-model="new[key]">
+          <td>
+
+          </td>
+          <td ng-repeat="column in endpoints[selectedEndpoint].columns">
+            <input required class="form-control" id="{{column}}" ng-model="new[column]">
           </td>
           <td>
             <button type="submit" ng-click="postListing()" class="btn btn-default">Add</button>
@@ -91,7 +131,9 @@
   <script src="./lib/angular.min.js"></script>
   <script src="./lib/ui-bootstrap-tpls-0.13.0.min.js"></script>
   <script src="./lib/angular-animate.min.js"></script>
+  <script src="./bower_components/angular-cookies/angular-cookies.min.js"></script>
   <script src="app.js"></script>
+  <!-- <script src="//code.angularjs.org/1.2.2/angular-cookies.js"></script> -->
 </body>
 
 </html>
