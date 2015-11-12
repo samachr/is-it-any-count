@@ -6,6 +6,8 @@ var config = require('./config');
 var colors = require('colors');
 var jwt = require('jsonwebtoken');
 
+app.set('port', (process.env.PORT || 5000));
+
 // configure app
 app.use(require('morgan')('dev')); // log requests to the console
 
@@ -179,9 +181,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 // START THE SERVER
 // =============================================================================
 
-var port = process.env.OPENSHIFT_NODEJS_PORT || 3000;
+var port = process.env.OPENSHIFT_NODEJS_PORT || process.env.port || 5000;
 var ipaddress = process.env.OPENSHIFT_NODEJS_IP || "127.0.0.1";
 
-var server = app.listen(port, ipaddress, function() {
-  console.log(('Server ready on ' + ipaddress + " port " + port).green);
+var server = app.listen(port, function() {
+  console.log(('Server ready on port ' + port).green);
 });
