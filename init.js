@@ -181,7 +181,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // START THE SERVER
 // =============================================================================
 
-var port = process.env.OPENSHIFT_NODEJS_PORT || process.env.port || 5000;
+var port = process.env.OPENSHIFT_NODEJS_PORT || process.env.PORT || 5000;
 var ipaddress = process.env.OPENSHIFT_NODEJS_IP || "127.0.0.1";
 
 var server = app.listen(port, function() {
